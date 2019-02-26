@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package oke;  // openssl-key-exchange
+
+message KeyExchangeRequest {
+    KeyExchangeType key_exchange_type     = 1;  // Which type of KeyExchangeType to request
+    KeyInfo         key_info              = 2;  // It has value when key_exchanage_type=KEY_EXCHANGE_INITIATE
+}
+
+message KeyExchangeResponse {
+    KeyExchangeType  key_exchange_type      = 1;  // Which of KeyExchangeType does it match
+    ResponseStatus   response_status        = 2;  // The status of KeyExchangeRequest execution result
+    KeyInfo          key_info               = 3;  // It has value when key_exchanage_type=KEY_EXCHANGE_INITIATE
+}
+
+message EncryptedRequest {
+    Token            token           = 1;  // The token to verify the identify of the client
+    Ciphertext       ciphertext      = 2;   // It can be decrypted into PlainText message
+}
+
+message EncryptedResponse {
+    ResponseStatus   response_status = 1;  // The status of EncryptedRequest execution result
+    Ciphertext       ciphertext     = 2;   // It can be decrypted into PlainText message
+}
+
+/* -----------Type definition for request and response dependencies----------- */
+enum KeyExchangeType {
+    UNKNOWN_REQUEST_TYPE    = 0;
+    KEY_EXCHANGE_INITIATE   = 1;  // Used to initialize the key exchange sequence
+    KEY_EXCHANGE_FINALIZE   = 2;  // Used to end the keyexchange sequence and indicate the execution result
+}
+
+message KeyInfo {
+    bytes salt_32bytes              = 1;  // Random digit
+    bytes ecdh_public_key_65bytes   = 2;  // Public-key of ECDH NIST P-256
+}
+
+message Token {
+    bytes  salt_3bytes             = 1;  // random at each request
+    bytes  hmac_3bytes             = 2;  // calculated by salt_3bytes and its public-key
+}
+
+message Ciphertext {
+    int32  cipher_version          = 1;  // default 1
+    bytes  aes_iv_12bytes          = 2;  // randomly generated each time
+    bytes  ciphertext_nbytes       = 3;  // PlainText message serialized and encrypted
+    bytes  aes_tag_16bytes         = 4;  // generated after AES encryption
+}
+
+message Plaintext {
+    // Custom defined message structure, you can customize it to your own needs
+    string     param1 = 1;
+    int32      param2 = 2;
+}
+
+message ResponseStatus {
+    enum StatusCode {
+        UNKNOWN_RESPONSE_STATUS  = 0;
+        OK                       = 1;
+        NOT_SUPPORTED            = 2;
+        INVALID_REQUEST          = 3;
+        ERROR                    = 4;
+    }
+
+    StatusCode       status_code   = 2;
+    string           error_message = 3;  // A human readable string
+}
+/*-----------------------------------------------------------------------------*/
