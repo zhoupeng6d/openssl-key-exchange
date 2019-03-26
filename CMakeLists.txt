@@ -10,10 +10,7 @@ message(STATUS "openssl libs: ${OPENSSL_LIBRARIES}")
 message(STATUS "protobuf libs: ${PROTOBUF_LIBRARIES}")
 
 set(SOURCES
-${CMAKE_SOURCE_DIR}/src/client.cc
-${CMAKE_SOURCE_DIR}/src/server.cc
-${CMAKE_SOURCE_DIR}/src/crypto.cc
-${CMAKE_SOURCE_DIR}/src/key_exchange.cc
+src/crypto.cc
 )
 
 include_directories(
@@ -32,5 +29,8 @@ PROTOBUF_GENERATE_CPP(PROTO_SRCS PROTO_HDRS ${PROTO_FILES})
 
 SET(CMAKE_CXX_FLAGS  "${CMAKE_CXX_FLAGS} --std=c++11")
 
-add_executable(key-exchange  ${SOURCES} ${PROTO_SRCS})
-target_link_libraries(key-exchange rpc ${OPENSSL_LIBRARIES} ${PROTOBUF_LIBRARIES} pthread)
+add_executable(server  src/server.cc ${SOURCES} ${PROTO_SRCS})
+target_link_libraries(server rpc ${OPENSSL_LIBRARIES} ${PROTOBUF_LIBRARIES} pthread)
+
+add_executable(client  src/client.cc ${SOURCES} ${PROTO_SRCS})
+target_link_libraries(client rpc ${OPENSSL_LIBRARIES} ${PROTOBUF_LIBRARIES} pthread)

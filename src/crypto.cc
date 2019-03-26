@@ -8,7 +8,7 @@
 #include <openssl/evp.h>
 #include <openssl/err.h>
 
-#define  OPENSSL_1_1_0 0
+#define  OPENSSL_1_1_0 0  // Support HKDF after openssl 1.1.0
 #if OPENSSL_1_1_0
 #include <openssl/kdf.h>
 #endif
@@ -49,8 +49,8 @@ bool crypto::rand_salt(uint8_t salt[], int32_t bytes)
     return (RAND_bytes(salt, bytes)==1);
 }
 
-bool crypto::generate_ecdh_keys(uint8_t ecdh_public_key[CRYPTO_ECDH_PUB_LEN],
-                              uint8_t ecdh_private_key[CRYPTO_ECDH_PRIV_LEN])
+bool crypto::generate_ecdh_keys(uint8_t ecdh_public_key[CRYPTO_ECDH_PUB_KEY_LEN],
+                              uint8_t ecdh_private_key[CRYPTO_ECDH_PRIV_KEY_LEN])
 {
     int len = 0;
     bool ret = false;
@@ -79,15 +79,15 @@ bool crypto::generate_ecdh_keys(uint8_t ecdh_public_key[CRYPTO_ECDH_PUB_LEN],
                                  point,
                                  POINT_CONVERSION_UNCOMPRESSED,
                                  ecdh_public_key,
-                                 CRYPTO_ECDH_PUB_LEN, NULL);
-        if (len != CRYPTO_ECDH_PUB_LEN)
+                                 CRYPTO_ECDH_PUB_KEY_LEN, NULL);
+        if (len != CRYPTO_ECDH_PUB_KEY_LEN)
         {
             CRYPTO_ERR("Ecdh NIST P-256 public key get error.");
             goto err;
         }
 
         len = BN_bn2bin(EC_KEY_get0_private_key(ecdh), ecdh_private_key);
-        if (len != CRYPTO_ECDH_PRIV_LEN)
+        if (len != CRYPTO_ECDH_PRIV_KEY_LEN)
         {
             CRYPTO_ERR("Ecdh NIST P-256 private key get error.");
             goto err;
@@ -101,10 +101,10 @@ err:
     return ret;
 }
 
-bool crypto::calc_ecdh_share_key(const uint8_t ecdh1_public_key[CRYPTO_ECDH_PUB_LEN],
-                          const uint8_t ecdh1_private_key[CRYPTO_ECDH_PRIV_LEN],
-                          const uint8_t ecdh2_public_key[CRYPTO_ECDH_PUB_LEN],
-                          uint8_t ecdh_shared_key[CRYPTO_ECDH_SHARED_LEN])
+bool crypto::calc_ecdh_shared_key(const uint8_t ecdh1_public_key[CRYPTO_ECDH_PUB_KEY_LEN],
+                                 const uint8_t ecdh1_private_key[CRYPTO_ECDH_PRIV_KEY_LEN],
+                                 const uint8_t ecdh2_public_key[CRYPTO_ECDH_PUB_KEY_LEN],
+                                 uint8_t ecdh_shared_key[CRYPTO_ECDH_SHARED_KEY_LEN])
 {
     int len = 0;
     int ret = false;
@@ -136,7 +136,7 @@ bool crypto::calc_ecdh_share_key(const uint8_t ecdh1_public_key[CRYPTO_ECDH_PUB_
         ret = EC_POINT_oct2point(group,
                                  p_ecdh1_public,
                                  ecdh1_public_key,
-                                 CRYPTO_ECDH_PUB_LEN, NULL);
+                                 CRYPTO_ECDH_PUB_KEY_LEN, NULL);
         if (!ret)
         {
             CRYPTO_ERR("EC_POINT oct2point error.");
@@ -149,7 +149,7 @@ bool crypto::calc_ecdh_share_key(const uint8_t ecdh1_public_key[CRYPTO_ECDH_PUB_
         }
 
         priv = BN_bin2bn(ecdh1_private_key,
-                            CRYPTO_ECDH_PRIV_LEN,
+                            CRYPTO_ECDH_PRIV_KEY_LEN,
                             NULL);
         if (!EC_KEY_set_private_key(ecdh, priv))
         {
@@ -168,7 +168,7 @@ bool crypto::calc_ecdh_share_key(const uint8_t ecdh1_public_key[CRYPTO_ECDH_PUB_
         ret = EC_POINT_oct2point(group,
                                  p_ecdh2_public,
                                  ecdh2_public_key,
-                                 CRYPTO_ECDH_PUB_LEN,
+                                 CRYPTO_ECDH_PUB_KEY_LEN,
                                  NULL);
         if (!ret)
         {
@@ -185,11 +185,11 @@ bool crypto::calc_ecdh_share_key(const uint8_t ecdh1_public_key[CRYPTO_ECDH_PUB_
 
     /* 3==> Calculate the shared key of ecdh1 and ecdh2 */
         len = ECDH_compute_key(ecdh_shared_key,
-                               CRYPTO_ECDH_SHARED_LEN,
+                               CRYPTO_ECDH_SHARED_KEY_LEN,
                                p_ecdh2_public,
                                ecdh,
                                NULL);
-        if (len != CRYPTO_ECDH_SHARED_LEN)
+        if (len != CRYPTO_ECDH_SHARED_KEY_LEN)
         {
             CRYPTO_ERR("Ecdh compute key error.");
             goto err;
@@ -227,7 +227,7 @@ bool crypto::hmac_sha256(uint8_t hmac[CRYPTO_HMAC_SHA256],
     return true;
 }
 
-bool crypto::array_xor(const uint8_t data1[], int data1_len,
+bool crypto::bytes_xor(const uint8_t data1[], int data1_len,
                const uint8_t data2[], int data2_len,
                uint8_t out[])
 {
@@ -245,7 +245,7 @@ bool crypto::array_xor(const uint8_t data1[], int data1_len,
 }
 /* ---------------------------------------------------- */
 
-bool crypto::generate_hkdf_bytes(const uint8_t ecdh_shared_key[CRYPTO_ECDH_SHARED_LEN],
+bool crypto::generate_hkdf_bytes(const uint8_t ecdh_shared_key[CRYPTO_ECDH_SHARED_KEY_LEN],
                                const uint8_t salt[CRYPTO_SALT_LEN],
                                const uint8_t info[], int info_len,
                                uint8_t out[])
@@ -268,7 +268,7 @@ bool crypto::generate_hkdf_bytes(const uint8_t ecdh_shared_key[CRYPTO_ECDH_SHARE
     if (EVP_PKEY_CTX_set1_hkdf_salt(pctx, salt, CRYPTO_SALT_LEN) <= 0)
         goto err;
 
-    if (EVP_PKEY_CTX_set1_hkdf_key(pctx, ecdh_shared_key, CRYPTO_ECDH_SHARED_LEN) <= 0)
+    if (EVP_PKEY_CTX_set1_hkdf_key(pctx, ecdh_shared_key, CRYPTO_ECDH_SHARED_KEY_LEN) <= 0)
         goto err;
 
     if (EVP_PKEY_CTX_add1_hkdf_info(pctx, info, info_len) <= 0)
@@ -286,14 +286,14 @@ err:
 #else
     //unsigned char secret[HASH_SIZE]={0};
     const EVP_MD *md = EVP_sha256();
-    unsigned char prk[CRYPTO_ECDH_SHARED_LEN], T[CRYPTO_ECDH_SHARED_LEN]={0}, tmp[CRYPTO_AES_KEY_LEN];
-    uint32_t outlen = CRYPTO_ECDH_SHARED_LEN;
+    unsigned char prk[CRYPTO_ECDH_SHARED_KEY_LEN], T[CRYPTO_ECDH_SHARED_KEY_LEN]={0}, tmp[CRYPTO_AES_KEY_LEN];
+    uint32_t outlen = CRYPTO_ECDH_SHARED_KEY_LEN;
     int i, ret, tmplen;
     unsigned char *p;
     /*extract is a simple HMAC...
       Note:salt should be treated as hmac key and ikm should be treated as data
      */
-    if (!HMAC(md, salt, CRYPTO_SALT_LEN, ecdh_shared_key, CRYPTO_ECDH_SHARED_LEN, prk, &outlen))
+    if (!HMAC(md, salt, CRYPTO_SALT_LEN, ecdh_shared_key, CRYPTO_ECDH_SHARED_KEY_LEN, prk, &outlen))
         return false;
 
     /*
@@ -306,7 +306,7 @@ err:
     /*do expand*/
 
     /*calc the round times*/
-    ret = CRYPTO_AES_KEY_LEN/CRYPTO_ECDH_SHARED_LEN + !!(CRYPTO_AES_KEY_LEN%CRYPTO_ECDH_SHARED_LEN);
+    ret = CRYPTO_AES_KEY_LEN/CRYPTO_ECDH_SHARED_KEY_LEN + !!(CRYPTO_AES_KEY_LEN%CRYPTO_ECDH_SHARED_KEY_LEN);
 
     tmplen = outlen;
     for (i = 0; i < ret; i++)
@@ -316,17 +316,17 @@ err:
         /*T(0) = empty string (zero length)*/
         if (i != 0)
         {
-            memcpy(p, T, CRYPTO_ECDH_SHARED_LEN);
-            p += CRYPTO_ECDH_SHARED_LEN;
+            memcpy(p, T, CRYPTO_ECDH_SHARED_KEY_LEN);
+            p += CRYPTO_ECDH_SHARED_KEY_LEN;
         }
 
         memcpy(p, info, info_len);
         p += info_len;
         *p++ = i + 1;
 
-        HMAC(md, prk, CRYPTO_ECDH_SHARED_LEN, tmp, (int)(p - tmp), T, &outlen);
-        memcpy(out + i*CRYPTO_ECDH_SHARED_LEN, T, tmplen < CRYPTO_ECDH_SHARED_LEN ? tmplen:CRYPTO_ECDH_SHARED_LEN);
-        tmplen -= CRYPTO_ECDH_SHARED_LEN;
+        HMAC(md, prk, CRYPTO_ECDH_SHARED_KEY_LEN, tmp, (int)(p - tmp), T, &outlen);
+        memcpy(out + i*CRYPTO_ECDH_SHARED_KEY_LEN, T, tmplen < CRYPTO_ECDH_SHARED_KEY_LEN ? tmplen:CRYPTO_ECDH_SHARED_KEY_LEN);
+        tmplen -= CRYPTO_ECDH_SHARED_KEY_LEN;
     }
 
     /*
