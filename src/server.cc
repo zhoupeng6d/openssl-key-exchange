@@ -1,3 +1,9 @@
+/*
+ * @Author: Dash Zhou
+ * @Date: 2019-03-27 18:28:34
+ * @Last Modified by:   Dash Zhou
+ * @Last Modified time: 2019-03-27 18:28:34
+ */
 
 #include <string>
 #include "crypto.h"
@@ -80,32 +86,13 @@ static std::string handle_key_exchange_request(const std::string &data)
         case oke::KeyExchangeType::KEY_EXCHANGE_FINALIZE:
             {
                 std::cout << "<<<<Received a KEY_EXCHANGE_FINALIZE request." << std::endl;
-                uint8_t salt_xor[CRYPTO_SALT_LEN];
 
-                crypto::bytes_xor(s_server_key.salt, CRYPTO_SALT_LEN,
-                                  s_client_key.salt, CRYPTO_SALT_LEN,
-                                  salt_xor);
-
-                uint8_t ecdh_shared_key[CRYPTO_ECDH_SHARED_KEY_LEN];
-                if (!crypto::calc_ecdh_shared_key(s_server_key.ecdh_pub_key, s_server_key.ecdh_priv_key,
-                                            s_client_key.ecdh_pub_key,
-                                            ecdh_shared_key))
+                if (!common::key_calculate(s_server_key, s_client_key))
                 {
                     status_code = oke::ResponseStatus_StatusCode_ERROR;
-                    error_msg   = "ecdh shared key calculation error.";
+                    error_msg   = "Key calculation error.";
                     break;
                 }
-
-                if (!crypto::generate_hkdf_bytes(ecdh_shared_key, salt_xor,
-                                            (uint8_t*)CRYPTO_KEY_INFO, strlen(CRYPTO_KEY_INFO), s_client_key.aes_key))
-                {
-                    status_code = oke::ResponseStatus_StatusCode_ERROR;
-                    error_msg   = "hkdf calculation error.";
-                    break;
-                }
-
-                std::cout << "Calculated the final AES-KEY:" << std::endl;
-                dash::hex_dump(s_client_key.aes_key, CRYPTO_AES_KEY_LEN, std::cout);
 
                 std::cout << "======================Key exchange completed======================\n" << std::endl;
             }
@@ -222,7 +209,7 @@ int main()
 
     srv.bind("encrypted_request", &handle_encrypted_request);
 
-    std::cout << "server running." << std::endl;
+    std::cout << "server running..." << std::endl;
 
     /* run the server loop */
     srv.run();

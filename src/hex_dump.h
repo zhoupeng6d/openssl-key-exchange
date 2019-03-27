@@ -1,3 +1,9 @@
+/*
+ * @Author: Dash Zhou
+ * @Date: 2019-03-27 18:28:25
+ * @Last Modified by:   Dash Zhou
+ * @Last Modified time: 2019-03-27 18:28:25
+ */
 
 #ifndef __HEX_DUMP_H
 #define __HEX_DUMP_H

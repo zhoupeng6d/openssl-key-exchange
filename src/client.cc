@@ -1,3 +1,10 @@
+/*
+ * @Author: Dash Zhou
+ * @Date: 2019-03-27 18:28:48
+ * @Last Modified by:   Dash Zhou
+ * @Last Modified time: 2019-03-27 18:28:48
+ */
+
 #include <iostream>
 #include <string>
 #include <chrono>
@@ -101,37 +108,6 @@ bool key_exchange_initiate(const crypto::ownkey_s &ownkey, crypto::peerkey_s &pe
     dash::hex_dump(response.key_info().salt_32bytes());
     memcpy(peerkey.ecdh_pub_key, response.key_info().ecdh_public_key_65bytes().data(), response.key_info().ecdh_public_key_65bytes().size());
     memcpy(peerkey.salt, response.key_info().salt_32bytes().data(), response.key_info().salt_32bytes().size());
-
-    return true;
-}
-
-bool key_calculate(const crypto::ownkey_s &ownkey, crypto::peerkey_s &peerkey)
-{
-    /* XOR the ownkey and peerkey to one array */
-    uint8_t salt_xor[CRYPTO_SALT_LEN];
-    if (!crypto::bytes_xor(ownkey.salt, sizeof(crypto::ownkey_s::salt), peerkey.salt, sizeof(crypto::peerkey_s::salt), salt_xor))
-    {
-        std::cout << "xor calculation error." << std::endl;
-        return false;
-    }
-
-    /* Calculate the shared key using own public and private keys and the public key of the other party */
-    uint8_t shared_key[CRYPTO_ECDH_SHARED_KEY_LEN];
-    if (!crypto::calc_ecdh_shared_key(ownkey.ecdh_pub_key, ownkey.ecdh_priv_key, peerkey.ecdh_pub_key, shared_key))
-    {
-        std::cout << "shared key calculation error." << std::endl;
-        return false;
-    }
-
-    /* Using HKDF to calculate the final AES key */
-    if (!crypto::generate_hkdf_bytes(shared_key, salt_xor, (uint8_t*)CRYPTO_KEY_INFO, strlen(CRYPTO_KEY_INFO), peerkey.aes_key))
-    {
-        std::cout << "hkdf calculation error." << std::endl;
-        return false;
-    }
-
-    std::cout << "Calculated the final AES-KEY:" << std::endl;
-    dash::hex_dump(peerkey.aes_key, CRYPTO_AES_KEY_LEN, std::cout);
 
     return true;
 }
@@ -294,7 +270,7 @@ int main()
     }
 
     /* Calculate the final AES-KEY after receiving the server's key */
-    if (!key_calculate(client_key, server_key))
+    if (!common::key_calculate(client_key, server_key))
     {
         std::cout << "Key calculation error." << std::endl;
         return -1;
