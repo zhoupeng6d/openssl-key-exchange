@@ -17,10 +17,19 @@ Messages transmitted between Server and Client use protobuf, protocol definition
 ## Build & Run
 Currently verified on Ubuntu and MacOS, the host needs to install the openssl library and the protobuf3.0+ library.
 
+Install libssl-dev
+```shell
+$ sudo apt-get install libssl-dev
+```
+
+Install protobuf-3.7.0 please refer to [https://github.com/protocolbuffers/protobuf/blob/master/src/README.md](https://github.com/protocolbuffers/protobuf/blob/master/src/README.md)
+
+After installing libssl and protobuf:
 ```shell
 $ git clone https://github.com/zhoupeng6d/openssl-key-exchange.git
 $ cd openssl-key-exchange
 $ git submodule init
+$ git submodule update
 $ mkdir build
 $ cmake ..
 $ make

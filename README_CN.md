@@ -16,10 +16,18 @@ Server和Client之间传输的消息使用protobuf，协议定义参考[key_exch
 ## 构建&运行
 目前已经在Ubuntu和MacOS上做了验证，需要主机安装openssl库和protobuf3.0+库
 
+安装libssl库：
+```shell
+$ sudo apt-get install libssl-dev
+```
+
+安装protobuf3.0+，请参考[https://github.com/protocolbuffers/protobuf/blob/master/src/README.md](https://github.com/protocolbuffers/protobuf/blob/master/src/README.md)
+
 ```shell
 $ git clone https://github.com/zhoupeng6d/openssl-key-exchange.git
 $ cd openssl-key-exchange
 $ git submodule init
+$ git submodule update
 $ mkdir build
 $ cmake ..
 $ make
