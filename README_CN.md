@@ -23,6 +23,7 @@ $ sudo apt-get install libssl-dev
 
 安装protobuf3.0+，请参考[https://github.com/protocolbuffers/protobuf/blob/master/src/README.md](https://github.com/protocolbuffers/protobuf/blob/master/src/README.md)
 
+安装完libssl和protobuf后，开始编译项目：
 ```shell
 $ git clone https://github.com/zhoupeng6d/openssl-key-exchange.git
 $ cd openssl-key-exchange
