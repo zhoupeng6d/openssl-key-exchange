@@ -1,6 +1,8 @@
 # openssl-key-exchange
 ![MIT](https://img.shields.io/badge/license-MIT-blue.svg)
 
+[English](./README.md) | 中文
+
 ## 简介
 该方案介绍一种通过ECDH椭圆曲线算法进行密钥交换的流程和方法，这种方案可以在的不安全的通信场景下进行AES密钥协商，即使有第三者监听到了所有的密钥交换信息，也无法获知最终计算出的AES密钥，防止MITM（Man-in-the-middle attack 中间人攻击）。
 
