@@ -34,3 +34,6 @@ target_link_libraries(server rpc ${OPENSSL_LIBRARIES} ${PROTOBUF_LIBRARIES} pthr
 
 add_executable(client  src/client.cc ${SOURCES} ${PROTO_SRCS})
 target_link_libraries(client rpc ${OPENSSL_LIBRARIES} ${PROTOBUF_LIBRARIES} pthread)
+
+add_executable(ecdsa-test  src/ecdsa-test.cc ${SOURCES} ${PROTO_SRCS})
+target_link_libraries(ecdsa-test ${OPENSSL_LIBRARIES} ${PROTOBUF_LIBRARIES})

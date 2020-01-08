@@ -2,7 +2,7 @@
  * @Author: Dash Zhou
  * @Date: 2019-03-27 18:28:39
  * @Last Modified by:   Dash Zhou
- * @Last Modified time: 2019-03-27 18:28:39
+ * @Last Modified time: 2020-01-08 15:52:20
  */
 
 #include <stdio.h>
@@ -50,13 +50,14 @@
 #define CRYPTO_PRINTF(fmt,args...)
 #endif
 
+
 bool crypto::rand_salt(uint8_t salt[], int32_t bytes)
 {
     return (RAND_bytes(salt, bytes)==1);
 }
 
-bool crypto::generate_ecdh_keys(uint8_t ecdh_public_key[CRYPTO_ECDH_PUB_KEY_LEN],
-                              uint8_t ecdh_private_key[CRYPTO_ECDH_PRIV_KEY_LEN])
+bool crypto::generate_ecdh_keys(uint8_t ecdh_public_key[CRYPTO_EC_PUB_KEY_LEN],
+                              uint8_t ecdh_private_key[CRYPTO_EC_PRIV_KEY_LEN])
 {
     int len = 0;
     bool ret = false;
@@ -85,15 +86,15 @@ bool crypto::generate_ecdh_keys(uint8_t ecdh_public_key[CRYPTO_ECDH_PUB_KEY_LEN]
                                  point,
                                  POINT_CONVERSION_UNCOMPRESSED,
                                  ecdh_public_key,
-                                 CRYPTO_ECDH_PUB_KEY_LEN, NULL);
-        if (len != CRYPTO_ECDH_PUB_KEY_LEN)
+                                 CRYPTO_EC_PUB_KEY_LEN, NULL);
+        if (len != CRYPTO_EC_PUB_KEY_LEN)
         {
             CRYPTO_ERR("Ecdh NIST P-256 public key get error.");
             goto err;
         }
 
         len = BN_bn2bin(EC_KEY_get0_private_key(ecdh), ecdh_private_key);
-        if (len != CRYPTO_ECDH_PRIV_KEY_LEN)
+        if (len != CRYPTO_EC_PRIV_KEY_LEN)
         {
             CRYPTO_ERR("Ecdh NIST P-256 private key get error.");
             goto err;
@@ -107,9 +108,9 @@ err:
     return ret;
 }
 
-bool crypto::calc_ecdh_shared_key(const uint8_t ecdh1_public_key[CRYPTO_ECDH_PUB_KEY_LEN],
-                                 const uint8_t ecdh1_private_key[CRYPTO_ECDH_PRIV_KEY_LEN],
-                                 const uint8_t ecdh2_public_key[CRYPTO_ECDH_PUB_KEY_LEN],
+bool crypto::calc_ecdh_shared_key(const uint8_t ecdh1_public_key[CRYPTO_EC_PUB_KEY_LEN],
+                                 const uint8_t ecdh1_private_key[CRYPTO_EC_PRIV_KEY_LEN],
+                                 const uint8_t ecdh2_public_key[CRYPTO_EC_PUB_KEY_LEN],
                                  uint8_t ecdh_shared_key[CRYPTO_ECDH_SHARED_KEY_LEN])
 {
     int len = 0;
@@ -142,7 +143,7 @@ bool crypto::calc_ecdh_shared_key(const uint8_t ecdh1_public_key[CRYPTO_ECDH_PUB
         ret = EC_POINT_oct2point(group,
                                  p_ecdh1_public,
                                  ecdh1_public_key,
-                                 CRYPTO_ECDH_PUB_KEY_LEN, NULL);
+                                 CRYPTO_EC_PUB_KEY_LEN, NULL);
         if (!ret)
         {
             CRYPTO_ERR("EC_POINT oct2point error.");
@@ -155,7 +156,7 @@ bool crypto::calc_ecdh_shared_key(const uint8_t ecdh1_public_key[CRYPTO_ECDH_PUB
         }
 
         priv = BN_bin2bn(ecdh1_private_key,
-                            CRYPTO_ECDH_PRIV_KEY_LEN,
+                            CRYPTO_EC_PRIV_KEY_LEN,
                             NULL);
         if (!EC_KEY_set_private_key(ecdh, priv))
         {
@@ -174,7 +175,7 @@ bool crypto::calc_ecdh_shared_key(const uint8_t ecdh1_public_key[CRYPTO_ECDH_PUB
         ret = EC_POINT_oct2point(group,
                                  p_ecdh2_public,
                                  ecdh2_public_key,
-                                 CRYPTO_ECDH_PUB_KEY_LEN,
+                                 CRYPTO_EC_PUB_KEY_LEN,
                                  NULL);
         if (!ret)
         {
@@ -215,6 +216,125 @@ err:
         EC_POINT_free(p_ecdh2_public);
 
     return (ret==0);
+}
+
+bool crypto::ecdsa_sign(const uint8_t ec_private_key[CRYPTO_EC_PRIV_KEY_LEN], uint8_t *hash, uint8_t hash_len, uint8_t sign[CRYPTO_ECDSA_SIG_LEN])
+{
+    int len = 0;
+    int ret = false;
+    EC_KEY *eckey = EC_KEY_new();
+    BIGNUM   *priv = NULL;
+    const EC_GROUP *group = NULL;
+    EC_POINT *p_ec_point = NULL;
+
+    eckey = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
+    if (eckey == NULL)
+    {
+        CRYPTO_ERR("Ecdh key by curve name error.");
+        goto err;
+    }
+
+    group = EC_KEY_get0_group(eckey);
+
+    if (EC_METHOD_get_field_type(EC_GROUP_method_of(group)) == NID_X9_62_prime_field)
+    {
+        priv = BN_bin2bn(ec_private_key,
+                            CRYPTO_EC_PRIV_KEY_LEN,
+                            NULL);
+        if (!EC_KEY_set_private_key(eckey, priv))
+        {
+            printf("set private error \n");
+        }
+
+        ECDSA_SIG *signature = ECDSA_do_sign(hash, hash_len, eckey);
+        if (NULL == signature)
+        {
+            CRYPTO_ERR("ECDSA_do_sign error.");
+            goto err;
+        }
+
+        ret = 0;
+
+        BN_bn2bin(signature->s, &sign[0]);
+        BN_bn2bin(signature->r, &sign[CRYPTO_ECDSA_SIG_s_LEN]);
+
+        ECDSA_SIG_free(signature);
+    }
+err:
+    if (priv)
+        BN_free(priv);
+    if (eckey)
+        EC_KEY_free(eckey);
+
+    return (ret == 0);
+}
+
+bool crypto::ecdsa_verify(const uint8_t ec_public_key[CRYPTO_EC_PUB_KEY_LEN], const uint8_t *hash, int hash_len, const uint8_t sign[CRYPTO_ECDSA_SIG_LEN])
+{
+    int len = 0;
+    int ret = false;
+    EC_KEY *eckey = EC_KEY_new();
+    const EC_GROUP *group = NULL;
+    EC_POINT *p_ec_point = NULL;
+
+    eckey = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
+    if (eckey == NULL)
+    {
+        CRYPTO_ERR("Ecdh key by curve name error.");
+        goto err;
+    }
+
+    group = EC_KEY_get0_group(eckey);
+
+    if (EC_METHOD_get_field_type(EC_GROUP_method_of(group)) == NID_X9_62_prime_field)
+    {
+    /* 1==> Set ecdh1's public and privat key. */
+        p_ec_point = EC_POINT_new(group);
+        if (p_ec_point == NULL)
+        {
+            CRYPTO_ERR("EC_POINT new error.");
+            goto err;
+        }
+
+        ret = EC_POINT_oct2point(group,
+                                 p_ec_point,
+                                 ec_public_key,
+                                 CRYPTO_EC_PUB_KEY_LEN, NULL);
+        if (!ret)
+        {
+            CRYPTO_ERR("EC_POINT oct2point error.");
+            goto err;
+        }
+
+        if (!EC_KEY_set_public_key(eckey, p_ec_point))
+        {
+            CRYPTO_ERR("Ecdh set public key error.");
+        }
+
+        ECDSA_SIG * signature = ECDSA_SIG_new();
+        if (signature == NULL)
+        {
+            CRYPTO_ERR("ECDSA_SIG_new error.");
+            goto err;
+        }
+
+        BN_bin2bn(&sign[0],  CRYPTO_ECDSA_SIG_s_LEN, signature->s);
+        BN_bin2bn(&sign[CRYPTO_ECDSA_SIG_s_LEN],  CRYPTO_ECDSA_SIG_r_LEN, signature->r);
+
+        int verifyret = ECDSA_do_verify(hash, hash_len, signature, eckey);
+
+        if (verifyret == 1) ret = 0;
+
+        if (signature) ECDSA_SIG_free(signature);
+    }
+
+err:
+    if (eckey)
+        EC_KEY_free(eckey);
+    if (p_ec_point)
+        EC_POINT_free(p_ec_point);
+
+    return (ret == 0);
 }
 
 bool crypto::hmac_sha256(uint8_t hmac[CRYPTO_HMAC_SHA256],

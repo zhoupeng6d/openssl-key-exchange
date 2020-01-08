@@ -63,11 +63,11 @@ bool key_exchange_initiate(const crypto::ownkey_s &ownkey, crypto::peerkey_s &pe
     oke::KeyInfo           *key_info = new oke::KeyInfo();
 
     /* send ownkey to server */
-    key_info->set_ecdh_public_key_65bytes(ownkey.ecdh_pub_key, sizeof(crypto::ownkey_s::ecdh_pub_key));
+    key_info->set_ec_public_key_65bytes(ownkey.ec_pub_key, sizeof(crypto::ownkey_s::ec_pub_key));
     key_info->set_salt_32bytes(ownkey.salt, sizeof(crypto::ownkey_s::salt));
     std::cout << ">>>>Send client's own key to server:" << std::endl;
     std::cout << "  ECDH-PUB-KEY:" << std::endl;
-    dash::hex_dump(key_info->ecdh_public_key_65bytes());
+    dash::hex_dump(key_info->ec_public_key_65bytes());
     std::cout << "  Salt:" << std::endl;
     dash::hex_dump(key_info->salt_32bytes());
 
@@ -95,7 +95,7 @@ bool key_exchange_initiate(const crypto::ownkey_s &ownkey, crypto::peerkey_s &pe
     }
     if (!key_exchange_check_response(response, oke::KeyExchangeType::KEY_EXCHANGE_INITIATE))
         return false;
-    if ((response.key_info().salt_32bytes().size() != 32) || (response.key_info().ecdh_public_key_65bytes().size() != 65))
+    if ((response.key_info().salt_32bytes().size() != 32) || (response.key_info().ec_public_key_65bytes().size() != 65))
     {
         std::cout << "Key length does not match." << std::endl;
         return false;
@@ -103,10 +103,10 @@ bool key_exchange_initiate(const crypto::ownkey_s &ownkey, crypto::peerkey_s &pe
 
     std::cout << "<<<<Received server's key:" << std::endl;
     std::cout << "  ECDH-PUB-KEY:" << std::endl;
-    dash::hex_dump(response.key_info().ecdh_public_key_65bytes());
+    dash::hex_dump(response.key_info().ec_public_key_65bytes());
     std::cout << "  Salt:" << std::endl;
     dash::hex_dump(response.key_info().salt_32bytes());
-    memcpy(peerkey.ecdh_pub_key, response.key_info().ecdh_public_key_65bytes().data(), response.key_info().ecdh_public_key_65bytes().size());
+    memcpy(peerkey.ec_pub_key, response.key_info().ec_public_key_65bytes().data(), response.key_info().ec_public_key_65bytes().size());
     memcpy(peerkey.salt, response.key_info().salt_32bytes().data(), response.key_info().salt_32bytes().size());
 
     return true;
@@ -169,7 +169,7 @@ bool encrypted_request(const crypto::ownkey_s &ownkey, const crypto::peerkey_s &
 
     /* Generate the client's token */
     oke::Token *token = new oke::Token();
-    if (!common::generate_token(ownkey.ecdh_pub_key, *token))
+    if (!common::generate_token(ownkey.ec_pub_key, *token))
     {
         std::cout << "token generation error." << std::endl;
         delete token;
@@ -245,11 +245,11 @@ int main()
     crypto::peerkey_s server_key;
 
     /*
-        Generate a pair of ECDH-KEY temporarily or you can load a pre-generated KEY from a file.
-        If you are using a pre-generated KEY, you can register it‘s ECDH-PUBLIC-KEY on the server advance,
+        Generate a pair of EC-KEY temporarily or you can load a pre-generated KEY from a file.
+        If you are using a pre-generated KEY, you can register it‘s EC-PUBLIC-KEY on the server advance,
           so that the server can identify whether the client is legal.
     */
-    if (!crypto::generate_ecdh_keys(client_key.ecdh_pub_key, client_key.ecdh_priv_key))
+    if (!crypto::generate_ecdh_keys(client_key.ec_pub_key, client_key.ec_priv_key))
     {
         std::cout << "ECDH-KEY generation failed." << std::endl;
         return -1;

@@ -47,7 +47,7 @@ static std::string handle_key_exchange_request(const std::string &data)
         case oke::KeyExchangeType::KEY_EXCHANGE_INITIATE:
             {
                 std::cout << "<<<<Received a KEY_EXCHANGE_INITIATE request." << std::endl;
-                if ((key_exchange_request.key_info().ecdh_public_key_65bytes().size() != CRYPTO_ECDH_PUB_KEY_LEN)
+                if ((key_exchange_request.key_info().ec_public_key_65bytes().size() != CRYPTO_EC_PUB_KEY_LEN)
                     || (key_exchange_request.key_info().salt_32bytes().size() != CRYPTO_SALT_LEN))
                 {
                     status_code = oke::ResponseStatus_StatusCode_ERROR;
@@ -55,15 +55,15 @@ static std::string handle_key_exchange_request(const std::string &data)
                     break;
                 }
 
-                std::cout << "Client's ECDH-PUB-KEY:" << std::endl;
-                dash::hex_dump(key_exchange_request.key_info().ecdh_public_key_65bytes());
+                std::cout << "Client's EC-PUB-KEY:" << std::endl;
+                dash::hex_dump(key_exchange_request.key_info().ec_public_key_65bytes());
 
                 std::cout << "Client's salt:" << std::endl;
                 dash::hex_dump(key_exchange_request.key_info().salt_32bytes());
 
-                memcpy(s_client_key.ecdh_pub_key,
-                        key_exchange_request.key_info().ecdh_public_key_65bytes().data(),
-                        key_exchange_request.key_info().ecdh_public_key_65bytes().size());
+                memcpy(s_client_key.ec_pub_key,
+                        key_exchange_request.key_info().ec_public_key_65bytes().data(),
+                        key_exchange_request.key_info().ec_public_key_65bytes().size());
                 memcpy(s_client_key.salt,
                         key_exchange_request.key_info().salt_32bytes().data(),
                         key_exchange_request.key_info().salt_32bytes().size());
@@ -72,12 +72,12 @@ static std::string handle_key_exchange_request(const std::string &data)
 
                 crypto::rand_salt(s_server_key.salt, sizeof(crypto::ownkey_s::salt));
 
-                key_info->set_ecdh_public_key_65bytes(s_server_key.ecdh_pub_key, CRYPTO_ECDH_PUB_KEY_LEN);
+                key_info->set_ec_public_key_65bytes(s_server_key.ec_pub_key, CRYPTO_EC_PUB_KEY_LEN);
                 key_info->set_salt_32bytes(s_server_key.salt, CRYPTO_SALT_LEN);
 
                 std::cout << ">>>>Send Server's own keys to client:" << std::endl;
                 std::cout << "  ECDH-PUB-KEY:" <<std::endl;
-                dash::hex_dump(key_info->ecdh_public_key_65bytes());
+                dash::hex_dump(key_info->ec_public_key_65bytes());
                 dash::hex_dump(key_info->salt_32bytes());
 
                 key_exchange_response.set_allocated_key_info(key_info);
@@ -155,7 +155,7 @@ std::string handle_encrypted_request(const std::string &data)
                     break;
                 }
 
-                if (!common::verify_token(s_client_key.ecdh_pub_key, encrypted_request.token()))
+                if (!common::verify_token(s_client_key.ec_pub_key, encrypted_request.token()))
                 {
                     status_code = oke::ResponseStatus_StatusCode_ERROR;
                     error_msg   = "token check failed.";
@@ -203,7 +203,7 @@ int main()
     // Create a server that listens on port 7000, or whatever the user selected
     rpc::server srv("0.0.0.0", 7000);
 
-    crypto::generate_ecdh_keys(s_server_key.ecdh_pub_key, s_server_key.ecdh_priv_key);
+    crypto::generate_ecdh_keys(s_server_key.ec_pub_key, s_server_key.ec_priv_key);
 
     srv.bind("key_exchange_request", &handle_key_exchange_request);
 

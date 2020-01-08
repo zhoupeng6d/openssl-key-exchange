@@ -32,7 +32,7 @@ enum KeyExchangeType {
 
 message KeyInfo {
     bytes salt_32bytes              = 1;  // Random digit
-    bytes ecdh_public_key_65bytes   = 2;  // Public-key of ECDH NIST P-256
+    bytes ec_public_key_65bytes   = 2;  // Public-key of EC NIST P-256
 }
 
 message Token {

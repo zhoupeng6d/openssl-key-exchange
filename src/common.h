@@ -73,13 +73,13 @@ inline bool encrypt_plaintext(const crypto::peerkey_s &peerkey, const std::strin
     return true;
 }
 
-inline bool verify_token(const uint8_t ecdh_pub_key[CRYPTO_ECDH_PUB_KEY_LEN], const oke::Token &token)
+inline bool verify_token(const uint8_t ecdh_pub_key[CRYPTO_EC_PUB_KEY_LEN], const oke::Token &token)
 {
     uint8_t hmac_256[CRYPTO_HMAC_SHA256];
 
     bool ret = crypto::hmac_sha256(hmac_256,
          (uint8_t *)token.salt_3bytes().data(), token.salt_3bytes().size(),
-         ecdh_pub_key, CRYPTO_ECDH_PUB_KEY_LEN);
+         ecdh_pub_key, CRYPTO_EC_PUB_KEY_LEN);
     if (!ret)
     {
         std::cout << "hmac calculation error." << std::endl;
@@ -95,7 +95,7 @@ inline bool verify_token(const uint8_t ecdh_pub_key[CRYPTO_ECDH_PUB_KEY_LEN], co
     return true;
 }
 
-inline bool generate_token(const uint8_t ecdh_pub_key[CRYPTO_ECDH_PUB_KEY_LEN], oke::Token &token)
+inline bool generate_token(const uint8_t ecdh_pub_key[CRYPTO_EC_PUB_KEY_LEN], oke::Token &token)
 {
     uint8_t random_digit[3];
     uint8_t hmac_256[CRYPTO_HMAC_SHA256];
@@ -107,7 +107,7 @@ inline bool generate_token(const uint8_t ecdh_pub_key[CRYPTO_ECDH_PUB_KEY_LEN], 
         return false;
     }
 
-    if (!crypto::hmac_sha256(hmac_256, random_digit, 3, ecdh_pub_key, CRYPTO_ECDH_PUB_KEY_LEN))
+    if (!crypto::hmac_sha256(hmac_256, random_digit, 3, ecdh_pub_key, CRYPTO_EC_PUB_KEY_LEN))
     {
         std::cout << "hmac calculation error." << std::endl;
         return false;
@@ -131,7 +131,7 @@ inline bool key_calculate(const crypto::ownkey_s &ownkey, crypto::peerkey_s &pee
 
     /* Calculate the shared key using own public and private keys and the public key of the other party */
     uint8_t shared_key[CRYPTO_ECDH_SHARED_KEY_LEN];
-    if (!crypto::calc_ecdh_shared_key(ownkey.ecdh_pub_key, ownkey.ecdh_priv_key, peerkey.ecdh_pub_key, shared_key))
+    if (!crypto::calc_ecdh_shared_key(ownkey.ec_pub_key, ownkey.ec_priv_key, peerkey.ec_pub_key, shared_key))
     {
         std::cout << "shared key calculation error." << std::endl;
         return false;
