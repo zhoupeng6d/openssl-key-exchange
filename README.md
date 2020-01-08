@@ -122,6 +122,9 @@ In this project, after passing KeyExchange, the Client will add a Token to each 
 2-4|  Salt
 5-7|  HMAC
 
+## ECDSA sign/verify
+Please refer to ecdsa-test.cc
+
 ## Thanks
 openssl-key-exchange builds on the efforts of fantastic C++ projects. In no particular order:
 * [rpclib](https://github.com/rpclib/rpclib)

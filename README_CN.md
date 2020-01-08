@@ -120,6 +120,9 @@ $ ./client # run the client in another terminal window
 2-4|  Salt
 5-7|  HMAC
 
+## ECDSA 签名/验签
+请参考ecdsa-test.cc
+
 ## 鸣谢
 本项目基于以下非常优秀的项目构建，排名无先后：
 * [rpclib](https://github.com/rpclib/rpclib)
