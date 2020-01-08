@@ -14,8 +14,12 @@
 
 namespace crypto{
 
-#define CRYPTO_EC_PUB_KEY_LEN      65
-#define CRYPTO_EC_PRIV_KEY_LEN     32
+#define CRYPTO_CURVE_NID            NID_X9_62_prime256v1
+//#define CRYPTO_CURVE_NID            NID_secp256k1
+
+
+#define CRYPTO_EC_PUB_KEY_LEN        65
+#define CRYPTO_EC_PRIV_KEY_LEN       32
 #define CRYPTO_SALT_LEN              32
 #define CRYPTO_ECDH_SHARED_KEY_LEN   32
 #define CRYPTO_HMAC_SHA256           32

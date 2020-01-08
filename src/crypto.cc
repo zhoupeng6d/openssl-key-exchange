@@ -67,7 +67,7 @@ bool crypto::generate_ecdh_keys(uint8_t ecdh_public_key[CRYPTO_EC_PUB_KEY_LEN],
     const EC_GROUP *group = NULL;
 
     //Generate Public
-    ecdh = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);//NID_secp521r1
+    ecdh = EC_KEY_new_by_curve_name(CRYPTO_CURVE_NID);
 
     group = EC_KEY_get0_group(ecdh);
 
@@ -121,7 +121,7 @@ bool crypto::calc_ecdh_shared_key(const uint8_t ecdh1_public_key[CRYPTO_EC_PUB_K
     EC_POINT *p_ecdh1_public = NULL;
     EC_POINT *p_ecdh2_public = NULL;
 
-    ecdh = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);//NID_secp521r1
+    ecdh = EC_KEY_new_by_curve_name(CRYPTO_CURVE_NID);
     if (ecdh == NULL)
     {
         CRYPTO_ERR("Ecdh key by curve name error.");
@@ -227,7 +227,7 @@ bool crypto::ecdsa_sign(const uint8_t ec_private_key[CRYPTO_EC_PRIV_KEY_LEN], ui
     const EC_GROUP *group = NULL;
     EC_POINT *p_ec_point = NULL;
 
-    eckey = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
+    eckey = EC_KEY_new_by_curve_name(CRYPTO_CURVE_NID);
     if (eckey == NULL)
     {
         CRYPTO_ERR("Ecdh key by curve name error.");
@@ -277,7 +277,7 @@ bool crypto::ecdsa_verify(const uint8_t ec_public_key[CRYPTO_EC_PUB_KEY_LEN], co
     const EC_GROUP *group = NULL;
     EC_POINT *p_ec_point = NULL;
 
-    eckey = EC_KEY_new_by_curve_name(NID_X9_62_prime256v1);
+    eckey = EC_KEY_new_by_curve_name(CRYPTO_CURVE_NID);
     if (eckey == NULL)
     {
         CRYPTO_ERR("Ecdh key by curve name error.");
